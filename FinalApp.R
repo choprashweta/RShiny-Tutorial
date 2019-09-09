@@ -20,7 +20,7 @@ library(stargazer)
 
 
 #Read dataset
-dataset <- read.csv("Bike-Sharing-Dataset/hour.csv")
+dataset <- read.csv("data/hour.csv")
 
 #Change season to factor
 dataset$season <- factor(
@@ -338,19 +338,13 @@ server <- function(input, output) {
         casual_count = sum(casual),
         registered_count = sum(registered),
         total_count = sum(cnt)
-      )
+      )%>%
+      gather(key = 'variable', value = 'value', -1)
     
-    subset <- as.data.frame(subset)
-    
-    
-    plot_data <- melt(subset[, c(input$x_axis,
-                                 'casual_count',
-                                 'registered_count',
-                                 'total_count')], id.vars = 1)
-    
+    #subset <- as.data.frame(subset)
     
     #Make the plot a reactive element
-    plot <- ggplot(data = plot_data) +
+    plot <- ggplot(data = subset) +
       #aes_string
       geom_bar(aes_string(x = input$x_axis, y = "value", fill = "variable"),
                stat = "identity",
