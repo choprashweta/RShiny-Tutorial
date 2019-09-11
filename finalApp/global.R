@@ -2,10 +2,9 @@
 #   PDSG: R Shiny Tutorial   #
 #----------------------------#
 
-# Install required packages
-if (!("packrat" %in% rownames(installed.packages()))) {
-  install.packages(packageInApp)
-}
+#Set Working Directory
+#setwd("D:/UPenn/RShiny_Tutorial/rshinytutorialmaterial")
+
 for (packageInApp in packrat:::appDependencies()) {
   if (!(packageInApp %in% rownames(installed.packages()))) {
     install.packages(packageInApp)
@@ -13,22 +12,22 @@ for (packageInApp in packrat:::appDependencies()) {
 }
 rm(packageInApp)
 
-# Import Packages
-library(shiny)
-library(shinydashboard)
+#Import Packages (if not installed use install.packages("package_name"))
 library(shinythemes)
-library(dplyr)
-library(tidyr)
-library(lubridate)
-# library(data.table)
-library(stargazer)
+library(shiny)
 library(ggplot2)
-library(RColorBrewer)
+library(dplyr)
 library(reshape2)
+library(RColorBrewer)
+library(lubridate)
+library(tidyr)
+library(shinydashboard)
+library(data.table)
+library(stargazer)
 
 
 # Read dataset
-dataset <- read.csv("data/hour.csv")
+dataset <- read.csv("data/Bike-Sharing-Dataset/hour.csv")
 
 # Change season to factor
 dataset$season <- factor(
