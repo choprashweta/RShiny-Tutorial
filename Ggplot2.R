@@ -40,13 +40,10 @@ class(dataset$mnth)
 dataset$dteday <- as.Date(dataset$dteday)
 
 #Create date fields as factors so we can have labels
-dataset$mnth <- factor(dataset$mnth, levels = c(1:12),
-                       labels = c("Jan", "Feb", "Mar", "Apr", "May",
-                                  "Jun", "Jul", "Aug", "Sep", "Oct",
-                                  "Nov", "Dec"))
 dataset$weekday <- factor(dataset$weekday, levels = c(0:6),
                           labels = c("Sun","Mon", "Tue", "Wed",
                                      "Thur", "Fri", "Sat"))
+dataset$hr <- factor(dataset$hr)
 
 dayHour <- dataset %>%
   group_by( hr, weekday) %>%
@@ -58,11 +55,13 @@ dayHour <- dataset %>%
 
 ggplot(dayHour, aes(hr, weekday)) + geom_tile(aes(fill = Total), colour = "white", na.rm = TRUE) +
   scale_fill_gradient(low = col1, high = col2) +  
-  guides(fill=guide_legend(title="Total Bike Sharing Users")) +
-  theme_bw() + theme_minimal() + 
+  guides(fill = guide_colourbar(title="Total Bike Sharing Users")) +
+  theme_minimal() + 
   labs(title = "Heatmap of Bike Sharing Users by Day of Week and Hour of Day",
        x = "Hour of Day", y = "Day of Week") +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        plot.title = element_text(hjust = 0.5),
+        text = element_text(size=11))
 
 
 #--------------------Plotting the Time Series----------------------#
@@ -84,7 +83,13 @@ ggplot(df, aes(x = dteday, y = value)) +
   scale_color_manual(values = c("#3f78bf", "#bf73cc", "#1ebbd7")) +
   theme_minimal() +
   xlab("Date") +
-  ylab("Number of Riders")
+  ylab("Number of Riders") +  
+  guides(colour = guide_legend(title="Bike Sharing Users over Time"))
+
+#Add a title and center it
+#Change the element text size to 12
+#Change the colors
+
 
 
 
