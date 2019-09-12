@@ -19,7 +19,7 @@ library(data.table)
 library(stargazer)
 
 #Read dataset
-dataset <- read.csv("Bike-Sharing-Dataset/hour.csv")
+dataset <- read.csv("data/hour.csv")
 
 
 #Create outer skeleton of the app
