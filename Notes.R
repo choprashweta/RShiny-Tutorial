@@ -2,6 +2,11 @@
 #          NOTES              #
 ###############################
 
+#SESSION 2 - POINTS TO COVER
+#Headers
+#1. Making the visualizations reactive
+#2. Regression Model reactive
+#3. Data Table reactive
 
 #SESSION 1 - POINTS TO COVER
 #Intro to the dataset
@@ -15,6 +20,9 @@
 ##### Create a Sidebar Panel with the following widgets:
 ##### Drop down for - Season, Weather, Weekday
 ##### Slider scale for - Temperature, Windspeed, Humidity
+
+#### Create a new tab - 'Author'
+#### Write your name as a header and insert an image of yourself/anything
 
 #7. Ggplot - Heatmap
 #8. Ggplot - Timeseries

@@ -74,92 +74,28 @@ dataset$holiday <- factor(dataset$holiday,
 # shinyApp(ui = ui, server = server)
 
 server <- function(input, output) {
- 
-  #Group data by season
-  
-  users_by_season <- dataset %>%
-    group_by(season) %>%
-    summarize(
-      casual_count = sum(casual),
-      registered_count = sum(registered),
-      total_count = sum(cnt)
-    )
-  
-  #Change to dataframe
-  users_by_season <- as.data.frame(users_by_season)
-  
-  plot_data <- melt(users_by_season[, c('season',
-                                        'casual_count',
-                                        'registered_count',
-                                        'total_count')], id.vars = 1)
-  
-  #Create a triple bar chart
-  season_plot <- ggplot(data = plot_data) +
-    geom_bar(aes(x = season, y = value, fill = variable),
-             stat = "identity",
-             position = "dodge") +
-    ggtitle("Bike Sharing Count by Season") +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5),
-          text = element_text(size = 14)) +
-    scale_fill_brewer(palette = "PuBu")
-  
-  output$seasonPlot <- renderPlot(season_plot)
-  
-  
   
   ### Deriving filtered data for Visualizations
   
-  plotDataContent = reactive({
-    
-    sub <- dataset
-    
-    if (input$season_viz != "All") {
-      sub = sub[sub$season == input$season_viz, ]
-    }
-    
-    if (input$weekday_viz != "All") {
-      sub = sub[sub$weekday == input$weekday_viz, ]
-    }
-    
-    if (input$weathersit_viz != "All") {
-      sub = sub[sub$weathersit == input$weathersit_viz, ]
-    }
-    
-    
-    sub = sub[(sub$hum > input$hum_viz[1]) &
-                (sub$hum < input$hum_viz[2]), ]
-    
-    sub = sub[(sub$windspeed > input$windspeed_viz[1]) &
-                (sub$windspeed < input$windspeed_viz[2]), ]
-    
-    sub = sub[(sub$temp > input$temp_viz[1]) &
-                (sub$temp < input$temp_viz[2]), ]
-    
-    sub
-    
-  })
   
-
   #--------------------#
   #   Heatmap of Usage #
   #--------------------#
-
+  
   #Assign colors for our map
   col1 = "#a8d8e7"
   col2 = "#1a6f89"
-
-
+  
+  
   output$timePlot1 <- renderPlot({
-
-    dayHour <- plotDataContent() %>%
+    
+    dayHour <- dataset %>%
       group_by(hr, weekday) %>%
       summarise(
         Cas = sum(casual),
         Reg = sum(registered),
-        Total = sum(cnt)
-      )
-
+        Total = sum(cnt))
+    
     ggplot(dayHour, aes(hr, weekday)) + geom_tile(aes(fill = Total), colour = "white", na.rm = TRUE) +
       scale_fill_gradient(low = col1, high = col2) +
       guides(fill = guide_legend(title = "Total Bike Sharing Users")) +
@@ -168,18 +104,18 @@ server <- function(input, output) {
            x = "Hour of Day", y = "Day of Week") +
       theme(panel.grid.major = element_blank(),
             panel.grid.minor = element_blank())
-
-    })
-
-
+    
+  })
+  
+  
   #-----------------#
   # Users over Time #
   #-----------------#
-
-
+  
+  
   output$timePlot2 <- renderPlot({
-
-    df <- plotDataContent() %>%
+    
+    df <- dataset %>%
       group_by(dteday) %>%
       summarise(
         Cas = sum(casual),
@@ -188,8 +124,8 @@ server <- function(input, output) {
       ) %>%
       select(dteday, Cas, Reg, Total) %>%
       gather(key = "riders", value = "value",-dteday)
-
-
+    
+    
     ggplot(df, aes(x = dteday, y = value)) +
       geom_line(aes(color = riders), size = 0.2) +
       scale_color_manual(values = c("#3f78bf", "#bf73cc", "#1ebbd7")) +
@@ -199,128 +135,9 @@ server <- function(input, output) {
       ggtitle("Time Series Plot") +
       theme(plot.title = element_text(hjust = 0.5),
             text = element_text(size = 14))
-
+    
   })
   
-  
-  #------------------
-  # Data Table
-  #------------------
-
-  dataTableContent <- reactive({
-    sub <- dataset
-
-    if (input$season != "All") {
-      sub = sub[sub$season == input$season, ]
-    }
-
-    if (input$weekday != "All") {
-      sub = sub[sub$weekday == input$weekday, ]
-    }
-
-    if (input$weathersit != "All") {
-      sub = sub[sub$weathersit == input$weathersit, ]
-    }
-
-
-    sub = sub[(sub$hum > input$hum[1]) &
-                (sub$hum < input$hum[2]), ]
-
-    sub = sub[(sub$windspeed > input$windspeed[1]) &
-                (sub$windspeed < input$windspeed[2]), ]
-
-    sub = sub[(sub$temp > input$temp[1]) &
-                (sub$temp < input$temp[2]), ]
-
-    sub = sub[(sub$dteday >= as.Date(input$dteday[1])) &
-                (sub$dteday <= as.Date(input$dteday[2])), ]
-
-
-    sub
-
-
-
-  })
-
-
-  output$datatable <- DT::renderDataTable(DT::datatable({
-    # Choosing just a few columns to display (leaving off timestamp)
-
-    d = dataTableContent()
-
-    d
-
-  }))
-
-  
-  #------------------
-  # Regression
-  #------------------
-  
-  #creating a reactive regression forumula that uses inputs from the check list
-  #as independent variables to predict the variable 
-  regFormula<- reactive({
-    as.formula(paste(input$dv," ~ ",paste(input$iv,collapse="+"))) 
-  })
-  
-  # then, put that formula into the lm() from survey package which outputs 
-  # a weighted regression
-  model <- reactive({
-    lm(regFormula(), dataset)
-  })
-  
-  # Creating pretty labels for the stargazer table
-  # Here, we are using if statements to build a vector, covars, that is dependent on the inputs
-  #from the beck list. 
-  covar.label <- reactive({
-    covars<-c()
-    if ('season' %in% input$iv){
-      covars <- c(covars,"Summer", "Fall", "Winter")
-    } 
-    
-    if ('holiday' %in% input$iv){
-      covars <- c(covars,"Holiday")
-    } 
-    
-    if ('atemp' %in% input$iv){
-      covars <- c(covars,"Average Temperature")
-    } 
-    
-    if ('hum' %in% input$iv){
-      covars <- c(covars,"Humidity")
-    } 
-    
-    if ('windspeed' %in% input$iv){
-      covars <- c(covars,"Windspeed")
-    } 
-    return(covars)
-  })
-  
-  
-  dep.label <- reactive({
-    dep <- ""
-    if (input$dv == "casual"){
-      dep <- "Casual Users"
-    }
-    
-    else if (input$dv == "registered"){
-      dep <- "Registered Users"
-    }
-    else {
-      dep <- "Total Users"
-    }
-    
-    return(dep)
-  })
-  
-  #Create nice regression table output
-  #stargazer() comes from the stargazer package
-  output$regTab <- renderText({
-    covars <- covar.label()
-    dep <- dep.label()
-    stargazer(model(),type="html",dep.var.labels = dep,covariate.labels = covars)
-  })  
- 
   
   
   #-----------------#
@@ -355,7 +172,7 @@ server <- function(input, output) {
                         labels = c("Casual Count",
                                    "Registered Count",
                                    "Total Count"))
-
+    
     
     return(plot)
     
@@ -442,7 +259,7 @@ ui <- fluidPage(
                                     "Windspeed",
                                     min = 0,
                                     max = 1.0,
-                                    val = c(0.1, 0.25)
+                                    value = c(0.1, 0.25)
                                   ),
                                   selectInput("weekday", "Weekday", choices =
                                                 c("All", levels(dataset$weekday))),
@@ -457,7 +274,7 @@ ui <- fluidPage(
                                     "Temperature",
                                     min = 0,
                                     max = 1.0,
-                                    val = c(0.5, 0.8)
+                                    value = c(0.5, 0.8)
                                   ),
                                   
                                   sliderInput(
@@ -465,7 +282,7 @@ ui <- fluidPage(
                                     "Humidity",
                                     min = 0,
                                     max = 1.0,
-                                    val = c(0.5, 0.8)
+                                    value = c(0.5, 0.8)
                                   ),
                                   
                                   dateRangeInput(
@@ -483,13 +300,7 @@ ui <- fluidPage(
                mainPanel(width = 9,
                          tabsetPanel(
                            tabPanel(
-                             "Raw Data",
-                             shinydashboard::box(
-                               title = "Filtered Data",
-                               width = NULL,
-                               status = "primary",
-                               div(style = 'overflow-x: scroll', DT::dataTableOutput("datatable"))
-                             )
+                             "Raw Data"
                              
                            )
                          ))
@@ -537,8 +348,7 @@ ui <- fluidPage(
         ),
         
         mainPanel(
-          h3("Table of Regression Coefficients"),
-          tableOutput("regTab")
+          h3("Table of Regression Coefficients")
           
         )
       )
@@ -559,7 +369,7 @@ ui <- fluidPage(
             "Windspeed",
             min = 0,
             max = 1.0,
-            val = c(0.0, 1.0)
+            value = c(0.0, 1.0)
           ),
           selectInput("weekday_viz", "Weekday", choices =
                         c("All", levels(dataset$weekday))),
@@ -574,7 +384,7 @@ ui <- fluidPage(
             "Temperature",
             min = 0,
             max = 1.0,
-            val = c(0.0, 1.0)
+            value = c(0.0, 1.0)
           ),
           
           sliderInput(
@@ -582,7 +392,7 @@ ui <- fluidPage(
             "Humidity",
             min = 0,
             max = 1.0,
-            val = c(0.0, 1.0)
+            value = c(0.0, 1.0)
           )
           
         ),
