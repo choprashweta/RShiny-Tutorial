@@ -2,6 +2,12 @@
 #          NOTES              #
 ###############################
 
+#SESSION 3 - POINTS TO COVER
+#1. Placematters App - simple without interaction
+#2. Show example of maps with basic interaction - PassNYC Code
+#3. Show example of Random Forest with basic interaction - PassNYC Code
+#4. Deploying an app - https://docs.rstudio.com/shinyapps.io/getting-started.html#installation
+
 #SESSION 2 - POINTS TO COVER
 #Headers
 #1. Making the visualizations reactive
